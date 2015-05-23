@@ -8,9 +8,9 @@ cpu_st: cpu_st.cpp shared_all.hpp
 	$(cc) -o $@ $< $(cflags)
 cpu_mt: cpu_mt.cpp shared_all.hpp
 	$(cc) -o $@ $< $(cflags)
-gpu_buf: gpu_buf.cpp shared_all.hpp
+gpu_buf: gpu_buf.cpp shared_all.hpp shared_gpu.hpp
 	$(cc) -o $@ $< $(cflags) $(OpenCL)
-gpu_img: gpu_img.cpp shared_all.hpp
+gpu_img: gpu_img.cpp shared_all.hpp shared_gpu.hpp
 	$(cc) -o $@ $< $(cflags) $(OpenCL)
 
 clean:

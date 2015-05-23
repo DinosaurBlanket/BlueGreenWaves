@@ -6,44 +6,21 @@
 #include <sstream>
 #include <fstream>
 #include "shared_all.hpp"
+#include "shared_gpu.hpp"
 
 const char *programTitle = "gpu_buf";
 
 int main(int argc, char* argv[]) {
-	cl_int status;
-	cl_uint cpuDeviceCount;
-	cl_uint gpuDeviceCount;
-	const int maxDevices = 8;
-	cl_device_id cpuDevices[maxDevices];
-	cl_device_id gpuDevices[maxDevices];
-	cl_device_id *computeDevices;
-	{
-		cl_uint platformCount;
-		cl_platform_id platform = NULL;
-		const int maxPlatforms = 8;
-		cl_platform_id platforms[maxPlatforms];
-		cl_int status = clGetPlatformIDs(maxPlatforms, platforms, &platformCount);
-		if (status != CL_SUCCESS  ||  platformCount < 1) {
-			cout << "failed: clGetPlatformIDs" << endl;
-			exit(__LINE__);
-		}
-		platform = platforms[0];
-		status = clGetDeviceIDs(
-			platform, CL_DEVICE_TYPE_CPU, maxDevices, cpuDevices, &cpuDeviceCount
-		);
-		status = clGetDeviceIDs(
-			platform, CL_DEVICE_TYPE_GPU, maxDevices, gpuDevices, &gpuDeviceCount
-		);
-		if (gpuDeviceCount) computeDevices = gpuDevices;
-		else {
-			cout << "no GPU devices found, using CPU instead" << endl;
-			computeDevices = cpuDevices;
-		}
+	cl_int status = CL_SUCCESS;
+	const cl_uint maxDevices = 8;
+	cl_device_id     computeDevices[maxDevices];
+	cl_context       context = NULL;
+	cl_command_queue commandQueue = NULL;
+	initOpenCL(computeDevices, maxDevices, context, commandQueue, status);
+	if (status != CL_SUCCESS) {
+		cout << "failed: initOpenCL" << endl;
+		exit(__LINE__);
 	}
-	cl_context context = clCreateContext(NULL,1, computeDevices,NULL,NULL,NULL);
-	cl_command_queue commandQueue = clCreateCommandQueueWithProperties(
-		context, computeDevices[0], 0, NULL
-	);
 	cl_program program;
 	{
 		const char *filename = "gpu_buf.cl";
