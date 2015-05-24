@@ -22,22 +22,10 @@ int main(int argc, char* argv[]) {
 		exit(__LINE__);
 	}
 	cl_program program;
-	{
-		const char *filename = "gpu_buf.cl";
-		ifstream sourceFile(filename);
-		stringstream sourceStream;
-		sourceStream << sourceFile.rdbuf();
-		string source = sourceStream.str();
-		const char *sources[] = {source.c_str()};
-		size_t  sourceSizes[] = {strlen(sources[0])};
-		program = clCreateProgramWithSource(
-			context, 1, sources, sourceSizes, NULL
-		);
-		status = clBuildProgram(program, 1, computeDevices, NULL,NULL,NULL);
-		if (status != CL_SUCCESS) {
-			cout << "failed: clBuildProgram" << endl;
-			exit(__LINE__);
-		}
+	initClProgram("gpu_buf.cl", program, context, computeDevices, status);
+	if (status != CL_SUCCESS) {
+		cout << "failed: initClProgram" << endl;
+		exit(__LINE__);
 	}
 	
 	cl_mem outputBuffer = clCreateBuffer(

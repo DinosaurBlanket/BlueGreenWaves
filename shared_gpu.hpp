@@ -2,8 +2,8 @@
 void initOpenCL(
 	cl_device_id     *devices, 
 	const cl_uint     maxDevices, 
-	cl_context       &context,
-	cl_command_queue &commandQueue,
+	cl_context       &context, 
+	cl_command_queue &commandQueue, 
 	cl_int           &status
 ) {
 	cl_uint platformCount;
@@ -48,6 +48,37 @@ void initOpenCL(
 	);
 	if (status != CL_SUCCESS) {
 		cout << "failed: clCreateCommandQueueWithProperties" << endl;
+		return;
+	}
+}
+
+
+#include <string>
+#include <sstream>
+#include <fstream>
+void initClProgram(
+	const char   *filename, 
+	cl_program   &program, 
+	cl_context   &context, 
+	cl_device_id *devices, 
+	cl_int       &status
+) {
+	ifstream sourceFile(filename);
+	stringstream sourceStream;
+	sourceStream << sourceFile.rdbuf();
+	string source = sourceStream.str();
+	const char *sources[] = {source.c_str()};
+	size_t  sourceSizes[] = {strlen(sources[0])};
+	program = clCreateProgramWithSource(
+		context, 1, sources, sourceSizes, &status
+	);
+	if (status != CL_SUCCESS) {
+		cout << "failed: clCreateProgramWithSource" << endl;
+		return;
+	}
+	status = clBuildProgram(program, 1, devices, NULL,NULL,NULL);
+	if (status != CL_SUCCESS) {
+		cout << "failed: clBuildProgram" << endl;
 		return;
 	}
 }
