@@ -1,10 +1,6 @@
 
 
 #include <CL/cl.h>
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <fstream>
 #include "shared_all.hpp"
 #include "shared_gpu.hpp"
 
@@ -93,7 +89,7 @@ int main(int argc, char* argv[]) {
 			videoSize*sizeof(uint32_t),   //size_t           cb,
 			videoOut,                     //void            *ptr,
 			0,                            //cl_uint          num_events_in_wait_list,
-			NULL,                         //const            cl_event *event_wait_list,
+			NULL,                         //const cl_event  *event_wait_list,
 			NULL                          //cl_event        *event
 		);
 		if (status != CL_SUCCESS) {
