@@ -6,7 +6,6 @@ double sintao(double n) {
 	return sin(n*6.283185307179586476925286766559005768394338798750);
 }
 
-
 SDL_atomic_t threadPunch;
 int threadCount;
 
@@ -16,8 +15,8 @@ int threadCount;
 void threadWait() {usleep(threadCount*5);}
 #endif
 
-void betweenFrames(void) {
-	//render
+Uint32 timeout = 0;
+void betweenFrames() {
 	SDL_UpdateTexture(
 		texture,
 		NULL, 
@@ -27,24 +26,10 @@ void betweenFrames(void) {
 	SDL_RenderClear(renderer);
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
-	
-	//print framerate
-	{
-		long now = getMicroseconds();
-		float fps = 1e6/(now-prevTime);
-		prevTime = now;
-		printf("%f\n", fps);
-	}
-	//SDL_Delay(100);
-	
-	//handle events
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_QUIT) running = false;
-	}
+	handleEvents();
+	if (SDL_TICKS_PASSED(SDL_GetTicks(), timeout)) running = false;
 	curFrame++;
 }
-
 
 int sharedWork(void *ti) {
 	const int threadIndex = *(int*)ti;
@@ -53,14 +38,16 @@ int sharedWork(void *ti) {
 	if (threadIndex == threadCount-1) my_row_end = videoHeight;
 	else my_row_end = (threadIndex+1) * (videoHeight/threadCount);
 	int64_t punchWait = threadCount;
-	
 	while (running) {
-		
 		for (uint32_t row = my_row_start; row < my_row_end; row++) {
 			for (uint32_t col = 0; col < videoWidth; col++) {
 				uint8_t r = 0;
-				uint8_t g = 255 * (sintao((row+fmod(curFrame,  videoHeight))/videoHeight)/2.0 + 0.5);
-				uint8_t b = 255 * (sintao((col+fmod(curFrame*8, videoWidth))/videoWidth )/2.0 + 0.5);
+				uint8_t g = 255 * (
+					sintao((row+fmod(curFrame,  videoHeight))/videoHeight)/2.0 + 0.5
+				);
+				uint8_t b = 255 * (
+					sintao((col+fmod(curFrame*8, videoWidth))/videoWidth )/2.0 + 0.5
+				);
 				uint8_t a = 255;
 				uint32_t color = 0;
 				color |= r << 24;
@@ -70,7 +57,6 @@ int sharedWork(void *ti) {
 				videoOut[(row*(int)videoWidth)+col] = color;
 			}
 		}
-		
 		if (threadIndex) {
 			SDL_AtomicIncRef(&threadPunch);
 			while (SDL_AtomicGet(&threadPunch) < punchWait) threadWait();
@@ -82,23 +68,22 @@ int sharedWork(void *ti) {
 		}
 		punchWait += threadCount;
 	}
-	
 	return 0;
 }
 
 
 int main(int argc, char **argv) {
+	cout << "\n" << __FILE__ << endl;
 	
 	videoOut = new uint32_t[videoSize];
-	initVideo();
-	SDL_SetWindowTitle(window, __FILE__);
+	initVideo(__FILE__);
 	
 	SDL_AtomicSet(&threadPunch, 0);
 	threadCount = SDL_GetCPUCount();
-	printf("\nusing %i threads\n", threadCount);
+	cout << "using " << threadCount << " threads" << endl;
 	
 	running = true;
-	prevTime = getMicroseconds();
+	timeout = SDL_GetTicks() + runTime;
 	
 	SDL_Thread *threads[threadCount];
 	int threadIndices[threadCount];
@@ -111,7 +96,7 @@ int main(int argc, char **argv) {
 			(void*)&threadIndices[i]
 		);
 		if (!threads[i]) {
-			printf("error: could not create thread %i\n", i);
+			cout << "failed to create thread " << i << endl;
 			exit(1);
 		}
 	}
@@ -119,11 +104,12 @@ int main(int argc, char **argv) {
 	sharedWork((void*)&threadIndices[0]);
 	
 	for (int i = 1; i < threadCount; i++) SDL_WaitThread(threads[i], NULL);
+	printFrameCount();
 	
 	delete[] videoOut;
 	SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-	return 0;
+	exit(0);
 }

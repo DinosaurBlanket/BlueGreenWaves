@@ -3,13 +3,10 @@
 #include <CL/cl.h>
 #include "shared_all.hpp"
 #include "shared_gpu.hpp"
-
-
 using namespace std;
 
-const uint32_t clPlatformSelection = 0;
-
 int main(int argc, char* argv[]) {
+	cout << "\n" << __FILE__ << endl;
 	cl_int status = CL_SUCCESS;
 	const cl_uint maxDevices = 8;
 	cl_device_id     computeDevices[maxDevices];
@@ -59,11 +56,10 @@ int main(int argc, char* argv[]) {
 	}
 	
 	videoOut = new uint32_t[videoSize];
-	initVideo();
-	SDL_SetWindowTitle(window, __FILE__);
+	initVideo(__FILE__);
 	running = true;
-	prevTime = getMicroseconds();
-	while (running) {
+	Uint32 timeout = SDL_GetTicks() + runTime;
+	while (!SDL_TICKS_PASSED(SDL_GetTicks(), timeout) && running) {
 		
 		status = clSetKernelArg(kernel, 0, sizeof(float),  (void*)&curFrame);
 		if (status != CL_SUCCESS) {
@@ -116,21 +112,10 @@ int main(int argc, char* argv[]) {
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 		
-		//print framerate
-		{
-			long now = getMicroseconds();
-			float fps = 1e6/(now-prevTime);
-			prevTime = now;
-			printf("FPS: %4.4f\n", fps);
-		}
-		
-		//handle events
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) running = false;
-		}
+		handleEvents();
 		curFrame++;
 	}
+	printFrameCount();
 	
 	status = clReleaseKernel(kernel);
 	status = clReleaseProgram(program);
@@ -146,6 +131,5 @@ int main(int argc, char* argv[]) {
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-	
 	exit(0);
 }

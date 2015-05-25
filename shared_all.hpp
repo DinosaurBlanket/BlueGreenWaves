@@ -1,33 +1,22 @@
 
 #include <iostream>
 #include <SDL2/SDL.h>
-
-#ifdef __linux__
-#include <time.h>
-#define microSleep usleep
-long getMicroseconds() {
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	return  ts.tv_sec * 1e6  +  ts.tv_nsec / 1000;
-}
-#endif
-
 using namespace std;
 
-const float videoWidth  = 1280;
-const float videoHeight =  720;
-const uint32_t videoSize = videoWidth * videoHeight;
-uint32_t     *videoOut = NULL;
-SDL_Window   *window   = NULL;
-SDL_Renderer *renderer = NULL;
-SDL_Texture  *texture  = NULL;
-void initVideo() {
+const float    videoWidth  = 1280;
+const float    videoHeight =  720;
+const uint32_t videoSize   = videoWidth * videoHeight;
+uint32_t      *videoOut = NULL;
+SDL_Window    *window   = NULL;
+SDL_Renderer  *renderer = NULL;
+SDL_Texture   *texture  = NULL;
+void initVideo(const char* windowTitle) {
 	if ( SDL_Init(SDL_INIT_VIDEO) ) {
 		cout << "failed to initialize SDL:\n" << SDL_GetError() << endl;
 		exit(__LINE__);
 	}
 	window = SDL_CreateWindow(
-		"window title",            //const char* title,
+		windowTitle,               //const char* title,
 		SDL_WINDOWPOS_UNDEFINED,   //int         x,
 		SDL_WINDOWPOS_UNDEFINED,   //int         y,
 		videoWidth,                //int         w,
@@ -56,6 +45,18 @@ void initVideo() {
 	}
 }
 
-bool running = false;
-long prevTime;
+bool  running  = false;
 float curFrame = 1;
+int   runTime  = 3000;//ms
+
+void handleEvents() {
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		if (event.type == SDL_QUIT) running = false;
+	}
+}
+
+void printFrameCount() {
+	cout << "ended on frame " << curFrame << ", about " 
+	<< curFrame/(runTime/1000) << " FPS" << endl;
+}
