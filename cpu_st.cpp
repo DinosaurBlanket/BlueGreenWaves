@@ -41,7 +41,6 @@ int main(int argc, char **argv) {
 			videoOut,
 			videoWidth*sizeof(uint32_t)
 		);
-		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 		

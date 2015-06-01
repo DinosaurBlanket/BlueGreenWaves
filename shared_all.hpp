@@ -27,7 +27,7 @@ void initVideo(const char* windowTitle) {
 		cout << "failed to create window:\n" << SDL_GetError() << endl;
 		exit(__LINE__);
 	}
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 	if (renderer == NULL) {
 		cout << "failed to create renderer:\n" << SDL_GetError() << endl;
 		exit(__LINE__);

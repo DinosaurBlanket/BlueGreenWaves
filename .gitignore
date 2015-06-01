@@ -2,3 +2,4 @@ cpu_st
 cpu_mt
 gpu_buf
 gpu_img
+gpu_tex

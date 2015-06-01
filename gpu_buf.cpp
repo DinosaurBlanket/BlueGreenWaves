@@ -98,7 +98,6 @@ int main(int argc, char* argv[]) {
 		
 		//render image on screen
 		SDL_UpdateTexture(texture, NULL, videoOut, videoWidth*sizeof(uint32_t));
-		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 		

@@ -57,6 +57,9 @@ int main(int argc, char* argv[]) {
 	
 	videoOut = new uint32_t[videoSize];
 	initVideo(__FILE__);
+	SDL_SetRenderTarget(renderer, texture);
+	SDL_RenderClear(renderer);
+	
 	running = true;
 	Uint32 timeout = SDL_GetTicks() + runTime;
 	while (!SDL_TICKS_PASSED(SDL_GetTicks(), timeout) && running) {
@@ -108,7 +111,6 @@ int main(int argc, char* argv[]) {
 		
 		//render image on screen
 		SDL_UpdateTexture(texture, NULL, videoOut, videoWidth*sizeof(uint32_t));
-		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 		
