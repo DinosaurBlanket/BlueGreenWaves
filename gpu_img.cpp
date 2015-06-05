@@ -23,6 +23,11 @@ int main(int argc, char* argv[]) {
 		cout << "failed: initClProgram" << endl;
 		exit(__LINE__);
 	}
+	cl_kernel kernel = clCreateKernel(program, "helloPixel", &status);
+	if (status != CL_SUCCESS) {
+		cout << "failed to create kernel" << endl;
+		exit(__LINE__);
+	}
 	
 	cl_image_format imageFormat = {CL_RGBA, CL_UNORM_INT8};
 	cl_image_desc imageDesc;
@@ -43,11 +48,6 @@ int main(int argc, char* argv[]) {
 		exit(__LINE__);
 	}
 	
-	cl_kernel kernel = clCreateKernel(program, "helloPixel", &status);
-	if (status != CL_SUCCESS) {
-		cout << "failed to create kernel" << endl;
-		exit(__LINE__);
-	}
 	
 	status = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void*)&outputImage);
 	if (status != CL_SUCCESS) {

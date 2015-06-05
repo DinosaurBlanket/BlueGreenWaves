@@ -23,15 +23,15 @@ int main(int argc, char* argv[]) {
 		cout << "failed: initClProgram" << endl;
 		exit(__LINE__);
 	}
-	
-	cl_mem outputBuffer = clCreateBuffer(
-		context, CL_MEM_WRITE_ONLY, videoSize*sizeof(uint32_t), NULL, NULL
-	);
 	cl_kernel kernel = clCreateKernel(program, "helloPixel", &status);
 	if (status != CL_SUCCESS) {
 		cout << "failed: clCreateKernel" << endl;
 		exit(__LINE__);
 	}
+	
+	cl_mem outputBuffer = clCreateBuffer(
+		context, CL_MEM_WRITE_ONLY, videoSize*sizeof(uint32_t), NULL, NULL
+	);
 	
 	status = clSetKernelArg(kernel, 0, sizeof(float),  (void*)&videoWidth);
 	if (status != CL_SUCCESS) {
