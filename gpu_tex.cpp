@@ -12,7 +12,15 @@
 #include <fstream>
 using namespace std;
 
-//SDL_Texture   *texture  = NULL;
+void CLnotify(
+	const char *errinfo, 
+	const void *private_info, 
+	size_t      cb, 
+	void       *user_data
+) {
+	cout << "from CLnotify: " << errinfo << endl;
+}
+
 int main(int argc, char *argv[]) {
 	cout << "\n" << __FILE__ << endl;
 	
@@ -99,12 +107,12 @@ int main(int argc, char *argv[]) {
 	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
 	GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoordIntoVS");
 	glVertexAttribPointer(
-		posAttrib, 
-		2, 
-		GL_FLOAT, 
-		GL_FALSE, 
-		4*sizeof(float),
-		0
+		posAttrib,       //GLuint        index,
+		2,               //GLint         size,
+		GL_FLOAT,        //GLenum        type,
+		GL_FALSE,        //GLboolean     normalized,
+		4*sizeof(float), //GLsizei       stride,
+		NULL             //const GLvoid *pointer
 	);
 	glVertexAttribPointer(
 		texAttrib, 
@@ -116,17 +124,6 @@ int main(int argc, char *argv[]) {
 	);
 	glEnableVertexAttribArray(posAttrib);
 	glEnableVertexAttribArray(texAttrib);
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
@@ -168,17 +165,26 @@ int main(int argc, char *argv[]) {
 			}
 			cout << "no GPU devices found, using CPU instead" << endl;
 		}
-		
 		cl_context_properties props[] = {
 			CL_CONTEXT_PLATFORM, (cl_context_properties)platform,
-			CL_GL_CONTEXT_KHR,   (cl_context_properties)GLcontext,
+			CL_GL_CONTEXT_KHR,   (cl_context_properties)GLcontext, 
+			//hDC ???
 			0
 		};
-		CLcontext = clCreateContext(props,1, CLdevices, NULL,NULL, &status);
+		cout << "A" << endl;
+		CLcontext = clCreateContext(
+			props,      //cl_context_properties *properties,
+			1,          //cl_uint                num_devices,
+			CLdevices,  //const cl_device_id    *devices,
+			&CLnotify,  //void                  *pfn_notify(const char *errinfo, const void *private_info, size_t cb, void *user_data),
+			NULL,       //void                  *user_data,
+			&status     //cl_int                *errcode_ret
+		);
 		if (status != CL_SUCCESS) {
 			cout << "failed: clCreateContext" << endl;
 			return  __LINE__;
 		}
+		cout << "B" << endl;
 		CLqueue = clCreateCommandQueueWithProperties(
 			CLcontext, CLdevices[0], 0, &status
 		);
@@ -217,13 +223,6 @@ int main(int argc, char *argv[]) {
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
 	GLuint GLtex;
 	glGenTextures(1, &GLtex);
 	glBindTexture(GL_TEXTURE_2D, GLtex);
@@ -234,43 +233,27 @@ int main(int argc, char *argv[]) {
 	
 	uint32_t *pixels = new uint32_t[videoSize];
 	glTexImage2D(
-		GL_TEXTURE_2D, 
-		0, 
-		GL_RGBA8, 
-		videoWidth, 
-		videoHeight, 
-		0, 
-		GL_RGBA, 
-		GL_UNSIGNED_BYTE, 
-		pixels
+		GL_TEXTURE_2D,    //GLenum        target,
+		0,                //GLint         level,
+		GL_RGBA8,         //GLint         internalformat,
+		videoWidth,       //GLsizei       width,
+		videoHeight,      //GLsizei       height,
+		0,                //GLint         border,
+		GL_RGBA,          //GLenum        format,
+		GL_UNSIGNED_BYTE, //GLenum        type,
+		pixels            //const GLvoid *data
 	);
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
 	cl_mem CLtex = clCreateFromGLTexture(
-		CLcontext, 
-		CL_MEM_WRITE_ONLY, 
-		GL_TEXTURE_2D, 
-		0,
-		GLtex,
-		NULL
+		CLcontext,          //cl_context   context,
+		CL_MEM_WRITE_ONLY,  //cl_mem_flags flags,
+		GL_TEXTURE_2D,      //GLenum       texture_target,
+		0,                  //GLint        miplevel,
+		GLtex,              //GLuint       texture,
+		&status             //cl_int      *errcode_ret
 	);
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
@@ -290,9 +273,6 @@ int main(int argc, char *argv[]) {
 		}
 		
 		
-		
-		
-		
 		glFinish();
 		clEnqueueAcquireGLObjects(CLqueue, 1, &CLtex, 0, 0, NULL);
 		status = clSetKernelArg(kernel, 0, sizeof(float),  (void*)&curFrame);
@@ -307,14 +287,10 @@ int main(int argc, char *argv[]) {
 		}
 		
 		
-		
-		
-		
-		
-		
-		
 		clFinish(CLqueue);
+		clEnqueueReleaseGLObjects(CLqueue, 1, &CLtex, 0, 0, NULL);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		
 		
 		SDL_GL_SwapWindow(window);
 		curFrame++;
